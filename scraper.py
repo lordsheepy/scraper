@@ -36,8 +36,14 @@ def extract_listings(parsed):
     extracted = []
     for listing in listings:
         location = {key: listing.attrs.get(key, '') for key in location_attrs}
+        link = listing.find('span', class_='pl').find('a')
+        price_span = listing.find('span', class_='price')
         this_listing = {
             'location': location,
+            'link': link.attrs['href'],
+            'description': link.string.strip(),
+            'price': price_span.string.strip(),
+            'size': price_span.next_sibling.strip(' \n-/')
         }
         extracted.append(this_listing)
     return extracted

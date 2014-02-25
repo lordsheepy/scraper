@@ -33,10 +33,18 @@ def parse_source(html, encoding='utf-8'):
 def extract_listings(parsed):
     location_attrs = {'data-latitude': True, 'data-longitude': True}
     listings = parsed.find_all('p', class_='row', attrs=location_attrs)
-    return listings
+    extracted = []
+    for listing in listings:
+        location = {key: listing.attrs.get(key, '') for key in location_attrs}
+        this_listing = {
+            'location': location,
+        }
+        extracted.append(this_listing)
+    return extracted
 
 
 if __name__ == '__main__':
+    import pprint
     if len(sys.argv) > 1 and sys.argv[1] == 'test':
         html, encoding = read_search_results()
     else:
@@ -46,4 +54,4 @@ if __name__ == '__main__':
     doc = parse_source(html, encoding)
     listings = extract_listings(doc)
     print len(listings)
-    print listings[0].prettify()
+    pprint.pprint(listings[0])

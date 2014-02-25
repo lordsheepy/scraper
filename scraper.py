@@ -23,6 +23,11 @@ def parse_source(html, encoding='utf-8'):
     return parsed
 
 
+def extract_listings(parsed):
+    listings = parsed.find_all('p', class_='row')
+    return listings
+
+
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'test':
         html, encoding = read_search_results()
@@ -31,4 +36,6 @@ if __name__ == '__main__':
             minAsk=500, maxAsk=1000, bedrooms=2
         )
     doc = parse_source(html, encoding)
-    print doc.prettify(encoding=encoding)
+    listings = extract_listings(doc)
+    print len(listings)
+    print listings[0].prettify()

@@ -31,7 +31,8 @@ def parse_source(html, encoding='utf-8'):
 
 
 def extract_listings(parsed):
-    listings = parsed.find_all('p', class_='row')
+    location_attrs = {'data-latitude': True, 'data-longitude': True}
+    listings = parsed.find_all('p', class_='row', attrs=location_attrs)
     return listings
 
 

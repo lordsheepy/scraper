@@ -18,6 +18,13 @@ def fetch_search_results(
     return resp.content, resp. encoding
 
 
+def read_search_results():
+    with open('apartments.html', 'r') as infile:
+        resp = infile.read()
+        encoding = 'utf-8'
+    return resp, encoding
+
+
 def parse_source(html, encoding='utf-8'):
     parsed = BeautifulSoup(html, from_encoding=encoding)
     return parsed

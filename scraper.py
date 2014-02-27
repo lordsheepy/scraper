@@ -1,10 +1,11 @@
 import requests
 import sys
+import json
 from bs4 import BeautifulSoup
 
 
 def fetch_search_results(
-    query=None, minAsk=None, maxAsk=None, bedrooms=None
+    query=None, minAsk=0, maxAsk=None, bedrooms=None
 ):
     search_params = {
         key: val for key, val in locals().items() if val is not None
@@ -33,7 +34,6 @@ def parse_source(html, encoding='utf-8'):
 def extract_listings(parsed):
     location_attrs = {'data-latitude': True, 'data-longitude': True}
     listings = parsed.find_all('p', class_='row', attrs=location_attrs)
-    extracted = []
     for listing in listings:
         location = {key: listing.attrs.get(key, '') for key in location_attrs}
         link = listing.find('span', class_='pl').find('a')
@@ -45,8 +45,26 @@ def extract_listings(parsed):
             'price': price_span.string.strip(),
             'size': price_span.next_sibling.strip(' \n-/')
         }
-        extracted.append(this_listing)
-    return extracted
+        yield this_listing
+
+
+def add_address(listing):
+    api_url = 'http://maps.googleapis.com/maps/api/geocode/json'
+    loc = listing['location']
+    latlng_tmpl = "{data-latitude},{data-longitude}"
+    parameters = {
+        'sensor': 'false',
+        'latlng': latlng_tmpl.format(**loc),
+    }
+    resp = requests.get(api_url, params=parameters)
+    resp.raise_for_status()
+    data = json.loads(resp.text)
+    if data['status'] == 'OK':
+        best = data['results'][0]
+        listing['address'] = best['formatted_address']
+    else:
+        listing['address'] = 'unavailable'
+    return listing
 
 
 if __name__ == '__main__':
@@ -58,6 +76,6 @@ if __name__ == '__main__':
             minAsk=500, maxAsk=1000, bedrooms=2
         )
     doc = parse_source(html, encoding)
-    listings = extract_listings(doc)
-    print len(listings)
-    pprint.pprint(listings[0])
+    for listing in extract_listings(doc):
+        listing = add_address(listing)
+        pprint.pprint(listing)
